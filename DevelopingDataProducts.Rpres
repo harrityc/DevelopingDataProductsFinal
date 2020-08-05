@@ -1,0 +1,51 @@
+Developing Data Products - Shiny Project
+========================================================
+author: Chris Harrity
+date: 8/4/20
+autosize: true
+
+The Future: Overcoming Mild Inconvenience
+========================================================
+
+It's a bit cumbersome to calculate significance tests for a bunch of proportions in R. Turn your proportions into a list of numbers, turn it into a 2x2 matrix, and *then* pass it to chisq.test or fisher.test. 
+
+Friends, we can do better.
+
+Behold!
+========================================================
+
+```{r}
+library(shiny)
+ui <- fluidPage(
+titlePanel("2x2 Table Proportion Testing: 
+           Automatic Chi-Squared/Fisher Selection"),  
+numericInput(inputId = "w", "Group 1 Successes", value = 10),
+numericInput(inputId = "x", "Group 1 Failures", value = 10),
+numericInput(inputId = "y", "Group 2 Successes", value = 10),
+numericInput(inputId = "z", "Group 2 Failures", value = 10),
+verbatimTextOutput(outputId = "chi")
+)
+
+server <- function(input, output) {
+  output$chi <- renderPrint({
+    if(input$w<10|input$x<10|input$y<10|input$z<10){
+    fisher.test(matrix(c(input$w,input$x,input$y,input$z), 
+             nrow = 2, ncol = 2))
+  } else {
+    chisq.test(matrix(c(input$w,input$x,input$y,input$z), 
+           nrow = 2, ncol = 2))
+  }
+})
+}
+shinyApp(ui = ui, server = server)
+```
+
+What Is This Sorcery?
+========================================================
+
+Conceptually speaking, this is not terribly difficult to understand. The first two fillable boxes represent the proportion of interest -- the distribution of events between 'successes' and 'failures' -- whereas the other two boxes represent the proportion (distribution) against which the proportion of interest is being compared.
+
+Why Two Different Tests?
+========================================================
+
+There is a threshold beyond which the traditional chi-square test is no longer considered an accurate estimate of how similar or dissimilar two proportions are. In such cases, Fisher's Exact Test is to be used. 
